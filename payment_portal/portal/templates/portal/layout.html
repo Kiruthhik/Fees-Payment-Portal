@@ -1,0 +1,138 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Student Portal{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'portal/style.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f9f9f9;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background-color: #fff;
+            border-right: 1px solid #ddd;
+            padding: 20px 0;
+            position: fixed;
+        }
+
+        .sidebar img {
+            width: 160px;
+            margin: 0 auto 20px;
+            display: block;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            font-size: 15px;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background-color: #f0e5ff;
+            color: #8e24aa;
+            font-weight: 600;
+        }
+
+        .nav-item i {
+            margin-right: 10px;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            background-color: #fff;
+            border-bottom: 1px solid #ddd;
+            padding: 20px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .page-content {
+            padding: 30px;
+            flex-grow: 1;
+        }
+
+        .logout-refresh {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .logout-refresh i {
+            cursor: pointer;
+            color: #999;
+            transition: color 0.2s ease;
+        }
+
+        .logout-refresh i:hover {
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <img src="{% static 'portal/logo.png' %}" alt="College Logo">
+    <a href="" class="nav-item {% if active == 'dashboard' %}active{% endif %}">
+        <i>🏠</i> Dashboard
+    </a>
+    <a href="" class="nav-item {% if active == 'teacher' %}active{% endif %}">
+        <i>🧑‍🏫</i> Teacher Selection
+    </a>
+    <a href="" class="nav-item {% if active == 'timetable' %}active{% endif %}">
+        <i>🗓️</i> My Timetable
+    </a>
+    <a href="" class="nav-item {% if active == 'rooms' %}active{% endif %}">
+        <i>📋</i> Free Rooms
+    </a>
+    <a href="" class="nav-item {% if active == 'transport' %}active{% endif %}">
+        <i>🚌</i> Transport
+    </a>
+    <a href="" class="nav-item {% if active == 'notes' %}active{% endif %}">
+        <i>📝</i> Notes
+    </a>
+
+    <div class="logout-refresh">
+        <i title="Logout">↩️</i>
+        <i title="Refresh">🔄</i>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="topbar">
+        Student Fees Payment Portal
+    </div>
+
+    <div class="page-content">
+        {% block content %}
+        <!-- Page-specific content -->
+        {% endblock %}
+    </div>
+</div>
+
+</body>
+</html>

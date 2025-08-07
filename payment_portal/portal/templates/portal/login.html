@@ -1,0 +1,131 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Login</title>
+    <link rel="stylesheet" href="{% static 'portal/style.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: url("{% static 'portal/clg-bg.png' %}") no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .login-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            width: 350px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            margin: 100px auto;
+            text-align: center;
+        }
+
+        .login-container img {
+            width: 200px;
+            margin-bottom: 5px;
+        }
+
+        .login-container h2 {
+            margin-bottom: 10px;
+            color: #111;
+        }
+
+        .login-container p {
+            margin-bottom: 20px;
+            color: #444;
+            font-size: 14px;
+        }
+
+        input[type="email"], input[type="password"] {
+            width: 100%;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .forgot-link {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .forgot-link a {
+            text-decoration: none;
+            color: #8e24aa;
+        }
+
+        button {
+            width: 50%;
+            padding: 12px;
+            background-color: #8e24aa;
+            border: none;
+            color: white;
+            font-size: 15px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #7b1fa2;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-wrapper input {
+            padding-right: 10px;
+        }
+
+        .password-wrapper .toggle {
+            position: absolute;
+            right: 10px;
+            top: 35%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <img src="{% static 'portal/logo.png' %}" alt="College Logo">
+    <h2>Student Fees Payment Portal Login</h2>
+    <p>Enter your credentials</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <input type="email" name="email" placeholder="College Email-Id" required>
+
+        <div class="password-wrapper">
+            <input type="password" name="password" id="password" placeholder="Password" required>
+            <span class="toggle" onclick="togglePassword()">👁️</span>
+        </div>
+
+        <div class="forgot-link">
+            <span></span>
+            <a href="#">Forgot password?</a>
+        </div>
+
+        <button type="submit">Sign in</button>
+    </form>
+</div>
+
+<script>
+    function togglePassword() {
+        const pwd = document.getElementById("password");
+        pwd.type = pwd.type === "password" ? "text" : "password";
+    }
+</script>
+
+</body>
+</html>
