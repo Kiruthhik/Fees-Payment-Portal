@@ -101,8 +101,20 @@
     <img src="{% static 'portal/logo.png' %}" alt="College Logo">
     <h2>Student Fees Payment Portal Login</h2>
     <p>Enter your credentials</p>
+    <!-- base.html (examples) -->
+<a href="{% url 'django_auth_adfs:login' %}?next={{ request.path }}">Login with Microsoft</a>
+<a href="{% url 'django_auth_adfs:logout' %}">Logout</a>
 
-    <form method="post">
+<!-- OR POST style (CSRF safe) -->
+<form method="post" action="{% url 'django_auth_adfs:login' %}">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{% url 'home' %}">
+
+  <button type="submit">Login</button>
+</form>
+
+
+    <!-- <form method="post">
         {% csrf_token %}
         <input type="email" name="email" placeholder="College Email-Id" required>
 
@@ -117,7 +129,7 @@
         </div>
 
         <button type="submit">Sign in</button>
-    </form>
+    </form> -->
 </div>
 
 <script>

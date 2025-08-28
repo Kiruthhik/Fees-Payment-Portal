@@ -11,21 +11,31 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-mni7g6-^x)ei$-9!ec^1(q2sqbuvg_8&_3=#8ksk_77q-q7mnq'
+SECRET_KEY = os.getenv('SECRET_KEY')
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 't')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://f76e52e7b6a2.ngrok-free.app',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
 
 
 # Application definition
@@ -37,7 +47,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_auth_adfs',
     'portal', 
+    'sslserver',
 ]
 
 MIDDLEWARE = [
@@ -48,6 +60,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_auth_adfs.middleware.LoginRequiredMiddleware',
 ]
 
 ROOT_URLCONF = 'payment_portal.urls'
@@ -99,6 +112,34 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Client secret is not public information. Should store it as an environment variable.
+
+AUTH_ADFS = {
+    'AUDIENCE': os.getenv('client_id'),
+    'CLIENT_ID': os.getenv('client_id'),
+    'CLIENT_SECRET': os.getenv('client_secret'),
+    'CLAIM_MAPPING': {'first_name': 'given_name',
+                      'last_name': 'family_name',
+                      'email': 'upn'},
+    'GROUPS_CLAIM': 'roles',
+    'MIRROR_GROUPS': True,
+    'USERNAME_CLAIM': 'upn',
+    'TENANT_ID': os.getenv('tenant_id'),
+    'RELYING_PARTY_ID': os.getenv('client_id'),
+    #"LOGIN_EXEMPT_URLS": ["api/", "public/"],
+    "LOGIN_EXEMPT_URLS": ["^$", "api/", "public/"],
+
+}
+
+
+
+AUTHENTICATION_BACKENDS = [
+    'django_auth_adfs.backend.AdfsAccessTokenBackend',
+    "django_auth_adfs.backend.AdfsAuthCodeBackend",
+]
+#from portal import urls
+LOGIN_URL = "/"
+LOGIN_REDIRECT_URL = '/home/'
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
@@ -121,3 +162,10 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Make Django treat ngrok connections as HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Optional: Force HTTPS cookies (good practice for OAuth)
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
