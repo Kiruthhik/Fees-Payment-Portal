@@ -86,12 +86,24 @@ WSGI_APPLICATION = 'payment_portal.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+import os
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+  'default': {
+    'ENGINE': 'mssql',  # provided by mssql-django
+    'NAME': os.environ.get('DB_NAME'),
+    'USER': os.environ.get('DB_USER'),    # or 'adminuser@servername' if server-admin
+    'PASSWORD': os.environ.get('DB_PASSWORD'),
+    'HOST': os.environ.get('DB_HOST'),
+    'PORT': '1433',
+    'OPTIONS': {
+        'driver': 'ODBC Driver 18 for SQL Server',
+        # optional extra params; Azure requires encryption:
+        'extra_params': 'Encrypt=yes;TrustServerCertificate=no;'
+    },
+  }
 }
+
 
 
 # Password validation
