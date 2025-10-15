@@ -126,22 +126,46 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Client secret is not public information. Should store it as an environment variable.
 
+# AUTH_ADFS = {
+#     'AUDIENCE': os.getenv('client_id'),
+#     'CLIENT_ID': os.getenv('client_id'),
+#     'CLIENT_SECRET': os.getenv('client_secret'),
+#     'CLAIM_MAPPING': {'first_name': 'given_name',
+#                       'last_name': 'family_name',
+#                       'email': 'upn'},
+#     'GROUPS_CLAIM': 'roles',
+#     'MIRROR_GROUPS': True,
+#     'USERNAME_CLAIM': 'upn',
+#     'TENANT_ID': os.getenv('tenant_id'),
+#     'RELYING_PARTY_ID': os.getenv('client_id'),
+#     #"LOGIN_EXEMPT_URLS": ["api/", "public/"],
+#     "LOGIN_EXEMPT_URLS": ["^$", "api/", "public/"],
+
+# }
 AUTH_ADFS = {
     'AUDIENCE': os.getenv('client_id'),
     'CLIENT_ID': os.getenv('client_id'),
     'CLIENT_SECRET': os.getenv('client_secret'),
-    'CLAIM_MAPPING': {'first_name': 'given_name',
-                      'last_name': 'family_name',
-                      'email': 'upn'},
+
+    'CLAIM_MAPPING': {
+        'first_name': 'given_name',
+        'last_name': 'family_name',
+        'email': 'upn',   # <– use UPN as the email fallback
+    },
+
+    'USERNAME_CLAIM': 'upn',   # <– must match token’s available claim
+
     'GROUPS_CLAIM': 'roles',
     'MIRROR_GROUPS': True,
-    'USERNAME_CLAIM': 'upn',
+
     'TENANT_ID': os.getenv('tenant_id'),
     'RELYING_PARTY_ID': os.getenv('client_id'),
-    #"LOGIN_EXEMPT_URLS": ["api/", "public/"],
-    "LOGIN_EXEMPT_URLS": ["^$", "api/", "public/"],
 
+    'LOGIN_EXEMPT_URLS': ["^$", "api/", "public/"],
 }
+
+
+
 
 
 
