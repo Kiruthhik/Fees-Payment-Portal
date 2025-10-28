@@ -1,0 +1,79 @@
+name: CI/CD - Build and Deploy to Azure App Service (Container)
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  IMAGE_NAME: ${{ secrets.IMAGE_NAME }}  # e.g. feepayment-portal
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.build-image.outputs.image }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Azure Container Registry login
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.ACR_REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Set up QEMU (for multi-platform) (optional)
+        uses: docker/setup-qemu-action@v2
+
+      - name: Build and push Docker image
+        id: build-image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ secrets.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Set output image
+        run: echo "::set-output name=image::${{ secrets.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+        id: set-image
+
+  deploy-to-appservice:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Configure Web App to use new image
+        env:
+          ACR_REGISTRY: ${{ secrets.ACR_REGISTRY }}
+          IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
+          RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
+        run: |
+          # set the image to the specific sha tag for immutability
+          az webapp config container set \
+            --name "$WEBAPP_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
+            --docker-custom-image-name "${ACR_REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA}" \
+            --docker-registry-server-url "https://${ACR_REGISTRY}"
+
+      - name: Restart Web App
+        env:
+          RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
+        run: |
+          az webapp restart --name "$WEBAPP_NAME" --resource-group "$RESOURCE_GROUP"
