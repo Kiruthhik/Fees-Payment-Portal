@@ -1,0 +1,82 @@
+name: CI/CD - Build and Deploy to Azure App Service (Container)
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  IMAGE_NAME: ${{ secrets.IMAGE_NAME }}  # e.g. feepayment-portal
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.build-image.outputs.image }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Log in to Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.ACR_REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        id: build-image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ secrets.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Export built image tag
+        id: export-tag
+        run: echo "image=${{ secrets.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_OUTPUT
+
+  deploy-to-appservice:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Configure Web App to use new image
+        env:
+          ACR_REGISTRY: ${{ secrets.ACR_REGISTRY }}
+          IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
+          RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          echo "Updating Web App $WEBAPP_NAME to use image ${ACR_REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA}"
+          az webapp config container set \
+            --name "$WEBAPP_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
+            --docker-custom-image-name "${ACR_REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA}" \
+            --docker-registry-server-url "https://${ACR_REGISTRY}"
+
+      - name: Restart Web App
+        env:
+          RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
+        run: |
+          echo "Restarting Web App..."
+          az webapp restart --name "$WEBAPP_NAME" --resource-group "$RESOURCE_GROUP"
