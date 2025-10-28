@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       image: ${{ steps.build-image.outputs.image }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,22 +23,26 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Log in to Azure Container Registry
+      - name: Azure Container Registry login
         uses: azure/docker-login@v1
         with:
           login-server: ${{ secrets.ACR_REGISTRY }}
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
+      # ✅ Set up Docker Buildx properly with container driver
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+          driver: docker-container
 
-      - name: Build and push Docker image
+      - name: Build and push Docker image to ACR
         id: build-image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./payment_portal             # 👈 Path to Django project
+          file: ./payment_portal/Dockerfile     # 👈 Path to Dockerfile
           push: true
           tags: |
             ${{ secrets.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
@@ -45,8 +50,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Export built image tag
-        id: export-tag
+      - name: Set image output
+        id: set-image
         run: echo "image=${{ secrets.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_OUTPUT
 
   deploy-to-appservice:
@@ -64,9 +69,8 @@ jobs:
           IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
           RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
           WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
-          GITHUB_SHA: ${{ github.sha }}
         run: |
-          echo "Updating Web App $WEBAPP_NAME to use image ${ACR_REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA}"
+          echo "Deploying image to Azure App Service..."
           az webapp config container set \
             --name "$WEBAPP_NAME" \
             --resource-group "$RESOURCE_GROUP" \
