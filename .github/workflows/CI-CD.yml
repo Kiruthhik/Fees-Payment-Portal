@@ -22,21 +22,22 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Azure Container Registry login
+      - name: Log in to Azure Container Registry
         uses: azure/docker-login@v1
         with:
           login-server: ${{ secrets.ACR_REGISTRY }}
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
-      - name: Set up QEMU (for multi-platform) (optional)
-        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build and push Docker image
         id: build-image
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./Dockerfile
           push: true
           tags: |
             ${{ secrets.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
@@ -44,9 +45,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Set output image
-        run: echo "::set-output name=image::${{ secrets.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
-        id: set-image
+      - name: Export built image tag
+        id: export-tag
+        run: echo "image=${{ secrets.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_OUTPUT
 
   deploy-to-appservice:
     needs: build-and-push
@@ -63,8 +64,9 @@ jobs:
           IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
           RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
           WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
+          GITHUB_SHA: ${{ github.sha }}
         run: |
-          # set the image to the specific sha tag for immutability
+          echo "Updating Web App $WEBAPP_NAME to use image ${ACR_REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA}"
           az webapp config container set \
             --name "$WEBAPP_NAME" \
             --resource-group "$RESOURCE_GROUP" \
@@ -76,4 +78,5 @@ jobs:
           RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
           WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
         run: |
+          echo "Restarting Web App..."
           az webapp restart --name "$WEBAPP_NAME" --resource-group "$RESOURCE_GROUP"
