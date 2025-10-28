@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       image: ${{ steps.build-image.outputs.image }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -29,15 +30,19 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
-      - name: Set up QEMU (for multi-platform) (optional)
-        uses: docker/setup-qemu-action@v2
+      # ✅ Set up Docker Buildx properly with container driver
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+          driver: docker-container
 
-      - name: Build and push Docker image
+      - name: Build and push Docker image to ACR
         id: build-image
         uses: docker/build-push-action@v5
         with:
-          context: ./payment_portal        # 👈 Your Django project directory
-          file: ./payment_portal/Dockerfile # 👈 Location of your Dockerfile
+          context: ./payment_portal             # 👈 Path to Django project
+          file: ./payment_portal/Dockerfile     # 👈 Path to Dockerfile
           push: true
           tags: |
             ${{ secrets.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
@@ -45,7 +50,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Set output image
+      - name: Set image output
         id: set-image
         run: echo "image=${{ secrets.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_OUTPUT
 
