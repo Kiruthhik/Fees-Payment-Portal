@@ -144,10 +144,18 @@ AUTH_PASSWORD_VALIDATORS = [
 #     "LOGIN_EXEMPT_URLS": ["^$", "api/", "public/"],
 
 # }
+from django.core.exceptions import ImproperlyConfigured
+
+def get_env_var(var_name):
+    value = os.getenv(var_name)
+    if not value:
+        raise ImproperlyConfigured(f"Missing environment variable: {var_name}")
+    return value
+
 AUTH_ADFS = {
-    'AUDIENCE': os.getenv('client_id'),
-    'CLIENT_ID': os.getenv('client_id'),
-    'CLIENT_SECRET': os.getenv('client_secret'),
+    'AUDIENCE': os.getenv('CLIENT_ID'),
+    'CLIENT_ID': os.getenv('CLIENT_ID'),
+    'CLIENT_SECRET': os.getenv('CLIENT_SECRET'),
 
     'CLAIM_MAPPING': {
         'first_name': 'given_name',
@@ -160,8 +168,8 @@ AUTH_ADFS = {
     'GROUPS_CLAIM': 'roles',
     'MIRROR_GROUPS': True,
 
-    'TENANT_ID': os.getenv('tenant_id'),
-    'RELYING_PARTY_ID': os.getenv('client_id'),
+    'TENANT_ID': os.getenv('TENANT_ID'),
+    'RELYING_PARTY_ID': os.getenv('CLIENT_ID'),
 
     'LOGIN_EXEMPT_URLS': ["^$", "api/", "public/"],
 }
