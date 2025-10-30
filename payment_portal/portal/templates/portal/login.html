@@ -100,12 +100,12 @@
 <div class="login-container">
     <img src="{% static 'portal/logo.png' %}" alt="College Logo">
     <h2>Student Fees Payment Portal Login</h2>
-    <p>Enter your credentials</p>
-    <!-- base.html (examples) -->
+    <!-- <p>Enter your credentials</p>
+    base.html (examples)
 <a href="{% url 'django_auth_adfs:login' %}?next={{ request.path }}">Login with Microsoft</a>
 <a href="{% url 'django_auth_adfs:logout' %}">Logout</a>
 
-<!-- OR POST style (CSRF safe) -->
+OR POST style (CSRF safe) -->
 <form method="post" action="{% url 'django_auth_adfs:login' %}">
   {% csrf_token %}
   <input type="hidden" name="next" value="{% url 'home' %}">
