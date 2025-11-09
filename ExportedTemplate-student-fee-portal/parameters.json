@@ -1,0 +1,33 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vulnerabilityAssessments_Default_storageContainerPath": {
+            "value": null
+        },
+        "servers_rec_server_name": {
+            "value": null
+        },
+        "sites_rec_student_fee_portal_name": {
+            "value": null
+        },
+        "serverfarms_ASP_studentfeeportal_a966_name": {
+            "value": null
+        },
+        "components_rec_student_fee_portal_name": {
+            "value": null
+        },
+        "registries_studentfeeportalacr_name": {
+            "value": null
+        },
+        "userAssignedIdentities_oidc_msi_948f_name": {
+            "value": null
+        },
+        "actionGroups_Application_Insights_Smart_Detection_name": {
+            "value": null
+        },
+        "workspaces_DefaultWorkspace_af67fa2a_b0a8_489b_aeb7_6046c2e64cf0_CID_externalid": {
+            "value": null
+        }
+    }
+}
